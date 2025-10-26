@@ -15,4 +15,4 @@ By building as the inaugural X402 facilitator on **BNB Chain**, **Unibase** unlo
 | Payment Schemes    | `exact`                                                                                                                 |
 | Supported Assets   | `EIP-3009`                                                                                                              |
 | Capabilities       | `Verify Payments` `Settle Payments` `Supported Endpoint` `List Resources`                                               |
-| Methods            | GET /v1/verify<br>- POST /v1/verify<br>- GET /v1/settle<br>- POST /v1/settle<br>- GET /v1/health<br>- GET /v1/supported |
+| Methods            |<br>- GET /v1/verify<br>- POST /v1/verify<br>- GET /v1/settle<br>- POST /v1/settle<br>- GET /v1/health<br>- GET /v1/supported |
