@@ -6,34 +6,16 @@ The [x402 payment protocol](https://docs.cdp.coinbase.com/x402/docs/overview) is
 
 ## x402 Facilitator
 
-The x402 Facilitator APIs enable you to facilitate payments using the x402 payment protocol by exposing two APIs:
+By building as the inaugural X402 facilitator on **BNB Chain**, **Unibase** unlocks the ability for AI agents to autonomously search, purchase, and pay. It utilizes the chain's low-cost and high-efficiency to bridge intelligent automation and real-world commerce.
 
-**Base Url:**
 
-https://api.x402.unibase.com/
 
-**Supported Networks:**
-
-`BSC mainnet`, `BSC testnet`
-
-**Payment Schemes:**
-
-`exact`
-
-**Supported Assets:**
-
-`EIP-3009`
-
-**Capabilities:**
-
-`Verify Payments` `Settle Payments` `Supported Endpoint` `List Resources`
-
-**Methods:**
-
-- GET /
-- GET /verify
-- POST /verify
-- GET /settle
-- POST /settle
-- GET /health
-- GET /supported
+|                    |                                                                                                                    |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| Base Url           | https://api.x402.unibase.com/                                                                                      |
+| Supported Networks | `BSC mainnet`, `BSC testnet`                                                                                       |
+| Payment Schemes    | `exact`                                                                                                            |
+| Supported Assets   | `EIP-3009`                                                                                                         |
+| Capabilities       | `Verify Payments` `Settle Payments` `Supported Endpoint` `List Resources`                                          |
+| Methods            | - GET /<br>- GET /verify<br>- POST /verify<br>- GET /settle<br>- POST /settle<br>- GET /health<br>- GET /supported |
+|                    |
