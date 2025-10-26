@@ -8,7 +8,7 @@ The [x402 payment protocol](https://docs.cdp.coinbase.com/x402/docs/overview) is
 
 By building as the inaugural X402 facilitator on **BNB Chain**, **Unibase** unlocks the ability for AI agents to autonomously search, purchase, and pay. It utilizes the chain's low-cost and high-efficiency to bridge intelligent automation and real-world commerce.
 
-|                    |                                                                                                                    |
+| Category           | Details                                                                                                            |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------ |
 | Base Url           | https://api.x402.unibase.com/                                                                                      |
 | Supported Networks | `BSC mainnet`, `BSC testnet`                                                                                       |
