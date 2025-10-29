@@ -161,12 +161,12 @@ static USDC_BASE: Lazy<USDCDeployment> = Lazy::new(|| {
 static USDC_BSC_TESTNET: Lazy<USDCDeployment> = Lazy::new(|| {
     USDCDeployment(TokenDeployment {
         asset: TokenAsset {
-            address: address!("0xb48249ef5b895d6e7ad398186df2b0c3cec2bf94").into(),
+            address: address!("0x74605D161b21aC6Ef4bab9DA2068F101297C596C").into(),
             network: Network::BscTestnet,
         },
         decimals: 18,
         eip712: Some(TokenDeploymentEip712 {
-            name: "USDC".into(),
+            name: "Wrapped USDC".into(),
             version: "2".into(),
         }),
     })
@@ -176,12 +176,12 @@ static USDC_BSC_TESTNET: Lazy<USDCDeployment> = Lazy::new(|| {
 static USDC_BSC: Lazy<USDCDeployment> = Lazy::new(|| {
     USDCDeployment(TokenDeployment {
         asset: TokenAsset {
-            address: address!("0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d").into(),
+            address: address!("0xf3A3E4D9c163251124229Da6DC9C98D889647804").into(),
             network: Network::Bsc,
         },
         decimals: 18,
         eip712: Some(TokenDeploymentEip712 {
-            name: "USD Coin".into(),
+            name: "Wrapped USDC".into(),
             version: "2".into(),
         }),
     })
