@@ -31,7 +31,7 @@ async fn main() {
     let usdc_bsc_testnet = USDCDeployment::by_network(Network::BscTestnet)
         .pay_to(address_evm!("0x74605D161b21aC6Ef4bab9DA2068F101297C596C"));
     let usdc_bsc = USDCDeployment::by_network(Network::Bsc)
-        .pay_to(address_sol!("0xf3A3E4D9c163251124229Da6DC9C98D889647804"));
+        .pay_to(address_evm!("0xf3A3E4D9c163251124229Da6DC9C98D889647804"));
 
     let app = Router::new()
         .route(
