@@ -410,7 +410,7 @@ where
                 let is_valid_signature_call =
                     validator6492.isValidSigWithSideEffects(payer, hash, original);
                 // Prepare the call to simulate transfer the funds
-                let transfer_call = transferWithAuthorization_0(&contract, &payment, inner).await?;
+                let transfer_call = transferWithAuthorization_1(&contract, &payment, inner).await?;
                 // Execute both calls in a single transaction simulation to accommodate for possible smart wallet creation
                 let (is_valid_signature_result, transfer_result) = self
                     .inner()
@@ -418,7 +418,7 @@ where
                     .add(is_valid_signature_call)
                     .add(transfer_call.tx)
                     .aggregate3()
-                    .instrument(tracing::info_span!("call_transferWithAuthorization_0",
+                    .instrument(tracing::info_span!("call_transferWithAuthorization_1",
                             from = %transfer_call.from,
                             to = %transfer_call.to,
                             value = %transfer_call.value,
@@ -511,7 +511,7 @@ where
                 original: _,
             } => {
                 let is_contract_deployed = is_contract_deployed(self.inner(), &payer).await?;
-                let transfer_call = transferWithAuthorization_0(&contract, &payment, inner).await?;
+                let transfer_call = transferWithAuthorization_1(&contract, &payment, inner).await?;
                 if is_contract_deployed {
                     // transferWithAuthorization with inner signature
                     self.send_transaction(MetaTransaction {
@@ -520,7 +520,7 @@ where
                         confirmations: 1,
                     })
                     .instrument(
-                        tracing::info_span!("call_transferWithAuthorization_0",
+                        tracing::info_span!("call_transferWithAuthorization_1",
                             from = %transfer_call.from,
                             to = %transfer_call.to,
                             value = %transfer_call.value,
@@ -554,7 +554,7 @@ where
                         confirmations: 1,
                     })
                     .instrument(
-                        tracing::info_span!("call_transferWithAuthorization_0",
+                        tracing::info_span!("call_transferWithAuthorization_1",
                             from = %transfer_call.from,
                             to = %transfer_call.to,
                             value = %transfer_call.value,
@@ -571,7 +571,7 @@ where
             }
             StructuredSignature::EIP1271(eip1271_signature) => {
                 let transfer_call =
-                    transferWithAuthorization_0(&contract, &payment, eip1271_signature).await?;
+                    transferWithAuthorization_1(&contract, &payment, eip1271_signature).await?;
                 // transferWithAuthorization with eip1271 signature
                 self.send_transaction(MetaTransaction {
                     to: transfer_call.tx.target(),
@@ -579,7 +579,7 @@ where
                     confirmations: 1,
                 })
                 .instrument(
-                    tracing::info_span!("call_transferWithAuthorization_0",
+                    tracing::info_span!("call_transferWithAuthorization_1",
                         from = %transfer_call.from,
                         to = %transfer_call.to,
                         value = %transfer_call.value,
