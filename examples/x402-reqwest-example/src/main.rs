@@ -15,8 +15,8 @@ async fn buy_evm() -> Result<(), Box<dyn std::error::Error>> {
     // Vanilla reqwest
     let http_client = Client::new()
         .with_payments(sender)
-        .prefer(USDCDeployment::by_network(Network::BaseSepolia))
-        .max(USDCDeployment::by_network(Network::BaseSepolia).amount(0.1)?)
+        .prefer(USDCDeployment::by_network(Network::Bsc))
+        .max(USDCDeployment::by_network(Network::Bsc).amount(0.1)?)
         .build();
 
     let response = http_client
