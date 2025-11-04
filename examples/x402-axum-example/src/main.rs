@@ -29,9 +29,9 @@ async fn main() {
         .unwrap()
         .with_base_url(url::Url::parse("https://localhost:3000/").unwrap());
     let usdc_bsc_testnet = USDCDeployment::by_network(Network::BscTestnet)
-        .pay_to(address_evm!("0x74605D161b21aC6Ef4bab9DA2068F101297C596C"));
+        .pay_to(address_evm!("0x50d146ff517e9376fced45ea3e8f0c3617f6f453"));
     let usdc_bsc = USDCDeployment::by_network(Network::Bsc)
-        .pay_to(address_evm!("0xf3A3E4D9c163251124229Da6DC9C98D889647804"));
+        .pay_to(address_evm!("0x50d146ff517e9376fced45ea3e8f0c3617f6f453"));
 
     let app = Router::new()
         .route(
