@@ -309,19 +309,19 @@ impl MetaEvmProvider for EvmProvider {
                 .get_gas_price()
                 .instrument(tracing::info_span!("get_gas_price"))
                 .await
-                .map_err(|e| FacilitatorLocalError::ContractCall(format!("{e:?}")))?;
+                .map_err(|e| FacilitatorLocalError::ContractCall(format!("get gas price: {e:?}")))?;
             txr.set_gas_price(gas);
         }
         let pending_tx = self
             .inner
             .send_transaction(txr)
             .await
-            .map_err(|e| FacilitatorLocalError::ContractCall(format!("{e:?}")))?;
+            .map_err(|e| FacilitatorLocalError::ContractCall(format!("send transaction: {e:?}")))?;
         pending_tx
             .with_required_confirmations(tx.confirmations)
             .get_receipt()
             .await
-            .map_err(|e| FacilitatorLocalError::ContractCall(format!("{e:?}")))
+            .map_err(|e| FacilitatorLocalError::ContractCall(format!("get receipt: {e:?}")))
     }
 }
 
@@ -428,16 +428,16 @@ where
                             otel.kind = "client",
                     ))
                     .await
-                    .map_err(|e| FacilitatorLocalError::ContractCall(format!("{e:?}")))?;
+                    .map_err(|e| FacilitatorLocalError::ContractCall(format!("verify aggregate3: {e:?}")))?;
                 let is_valid_signature_result = is_valid_signature_result
-                    .map_err(|e| FacilitatorLocalError::ContractCall(format!("{e:?}")))?;
+                    .map_err(|e| FacilitatorLocalError::ContractCall(format!("verify is_valid_signature_result: {e:?}")))?;
                 if !is_valid_signature_result {
                     return Err(FacilitatorLocalError::InvalidSignature(
                         payer.into(),
                         "Incorrect signature".to_string(),
                     ));
                 }
-                transfer_result.map_err(|e| FacilitatorLocalError::ContractCall(format!("{e}")))?;
+                transfer_result.map_err(|e| FacilitatorLocalError::ContractCall(format!("vefify EIP6492: {e}")))?;
             }
             StructuredSignature::EIP1271(signature) => {
                 // It is EOA or EIP-1271 signature, which we can pass to the transfer simulation
@@ -459,7 +459,7 @@ where
                             otel.kind = "client",
                     ))
                     .await
-                    .map_err(|e| FacilitatorLocalError::ContractCall(format!("{e:?}")))?;
+                    .map_err(|e| FacilitatorLocalError::ContractCall(format!("verify EIP1271:{e:?}")))?;
             }
         }
 
@@ -711,7 +711,7 @@ async fn assert_enough_balance<P: Provider>(
             otel.kind = "client"
         ))
         .await
-        .map_err(|e| FacilitatorLocalError::ContractCall(format!("{e:?}")))?;
+        .map_err(|e| FacilitatorLocalError::ContractCall(format!("assert_enough_balance: {e:?}")))?;
 
     if balance < max_amount_required {
         Err(FacilitatorLocalError::InsufficientFunds((*sender).into()))
@@ -762,7 +762,7 @@ async fn is_contract_deployed<P: Provider>(
             otel.kind = "client",
         ))
         .await
-        .map_err(|e| FacilitatorLocalError::ContractCall(format!("{e:?}")))?;
+        .map_err(|e| FacilitatorLocalError::ContractCall(format!("is_contract_deployed: {e:?}")))?;
     Ok(!bytes.is_empty())
 }
 
@@ -814,7 +814,7 @@ async fn assert_domain<P: Provider>(
                 otel.kind = "client",
             ))
             .await
-            .map_err(|e| FacilitatorLocalError::ContractCall(format!("{e:?}")))?
+            .map_err(|e| FacilitatorLocalError::ContractCall(format!("assert domain: {e:?}")))?
     };
     let domain = eip712_domain! {
         name: name,
