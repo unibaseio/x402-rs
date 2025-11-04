@@ -11,6 +11,7 @@ use crate::types::{
 
 pub mod evm;
 pub mod solana;
+pub mod utils;
 
 pub enum NetworkProvider {
     Evm(EvmProvider),

@@ -41,6 +41,7 @@ use tokio::sync::Mutex;
 use tracing::{Instrument, instrument};
 use tracing_core::Level;
 
+use crate::chain::utils::parse_signature_bytes;
 use crate::chain::{FacilitatorLocalError, FromEnvByNetworkBuild, NetworkProviderOps};
 use crate::facilitator::Facilitator;
 use crate::from_env;
@@ -1014,10 +1015,7 @@ async fn transferWithAuthorization_1<'a, P: Provider>(
     let valid_after: U256 = payment.valid_after.into();
     let valid_before: U256 = payment.valid_before.into();
     let nonce = FixedBytes(payment.nonce.0);
-    let sig = Signature::from_raw(&signature).unwrap();
-    let v = sig.v();
-    let r = sig.r();
-    let s = sig.s();
+    let (r, s, v) = parse_signature_bytes(&signature).unwrap();
     let tx = contract.transferWithAuthorization_1(
         from,
         to,
@@ -1025,9 +1023,9 @@ async fn transferWithAuthorization_1<'a, P: Provider>(
         valid_after,
         valid_before,
         nonce,
-        v.into(),
-        r.into(),
-        s.into(),
+        v,
+        r,
+        s,
     );
     Ok(TransferWithAuthorization1Call {
         tx,
