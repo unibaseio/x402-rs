@@ -19,7 +19,7 @@ use alloy::dyn_abi::SolType;
 use alloy::network::{
     Ethereum as AlloyEthereum, EthereumWallet, NetworkWallet, TransactionBuilder,
 };
-use alloy::primitives::{Address, Bytes, FixedBytes, U256, address};
+use alloy::primitives::{Address, Bytes, FixedBytes, Signature, U256, address};
 use alloy::providers::ProviderBuilder;
 use alloy::providers::bindings::IMulticall3;
 use alloy::providers::fillers::NonceManager;
@@ -309,14 +309,15 @@ impl MetaEvmProvider for EvmProvider {
                 .get_gas_price()
                 .instrument(tracing::info_span!("get_gas_price"))
                 .await
-                .map_err(|e| FacilitatorLocalError::ContractCall(format!("get gas price: {e:?}")))?;
+                .map_err(|e| {
+                    FacilitatorLocalError::ContractCall(format!("get gas price: {e:?}"))
+                })?;
             txr.set_gas_price(gas);
         }
-        let pending_tx = self
-            .inner
-            .send_transaction(txr)
-            .await
-            .map_err(|e| FacilitatorLocalError::ContractCall(format!("send transaction: {e:?}")))?;
+        let pending_tx =
+            self.inner.send_transaction(txr).await.map_err(|e| {
+                FacilitatorLocalError::ContractCall(format!("send transaction: {e:?}"))
+            })?;
         pending_tx
             .with_required_confirmations(tx.confirmations)
             .get_receipt()
@@ -428,21 +429,28 @@ where
                             otel.kind = "client",
                     ))
                     .await
-                    .map_err(|e| FacilitatorLocalError::ContractCall(format!("verify aggregate3: {e:?}")))?;
-                let is_valid_signature_result = is_valid_signature_result
-                    .map_err(|e| FacilitatorLocalError::ContractCall(format!("verify is_valid_signature_result: {e:?}")))?;
+                    .map_err(|e| {
+                        FacilitatorLocalError::ContractCall(format!("verify aggregate3: {e:?}"))
+                    })?;
+                let is_valid_signature_result = is_valid_signature_result.map_err(|e| {
+                    FacilitatorLocalError::ContractCall(format!(
+                        "verify is_valid_signature_result: {e:?}"
+                    ))
+                })?;
                 if !is_valid_signature_result {
                     return Err(FacilitatorLocalError::InvalidSignature(
                         payer.into(),
                         "Incorrect signature".to_string(),
                     ));
                 }
-                transfer_result.map_err(|e| FacilitatorLocalError::ContractCall(format!("vefify EIP6492: {e}")))?;
+                transfer_result.map_err(|e| {
+                    FacilitatorLocalError::ContractCall(format!("vefify EIP6492: {e}"))
+                })?;
             }
             StructuredSignature::EIP1271(signature) => {
                 // It is EOA or EIP-1271 signature, which we can pass to the transfer simulation
                 let transfer_call =
-                    transferWithAuthorization_0(&contract, &payment, signature).await?;
+                    transferWithAuthorization_1(&contract, &payment, signature).await?;
                 transfer_call
                     .tx
                     .call()
@@ -459,7 +467,9 @@ where
                             otel.kind = "client",
                     ))
                     .await
-                    .map_err(|e| FacilitatorLocalError::ContractCall(format!("verify EIP1271:{e:?}")))?;
+                    .map_err(|e| {
+                        FacilitatorLocalError::ContractCall(format!("verify EIP1271:{e:?}"))
+                    })?;
             }
         }
 
@@ -654,6 +664,33 @@ pub struct TransferWithAuthorization0Call<P> {
     pub contract_address: alloy::primitives::Address,
 }
 
+/// A prepared call to `transferWithAuthorization` (ERC-3009) including all derived fields.
+///
+/// This struct wraps the assembled call builder, making it reusable across verification
+/// (`.call()`) and settlement (`.send()`) flows, along with context useful for tracing/logging.
+///
+/// This is created by [`EvmProvider::transferWithAuthorization_0`].
+pub struct TransferWithAuthorization1Call<P> {
+    /// The prepared call builder that can be `.call()`ed or `.send()`ed.
+    pub tx: SolCallBuilder<P, USDC::transferWithAuthorization_1Call>,
+    /// The sender (`from`) address for the authorization.
+    pub from: alloy::primitives::Address,
+    /// The recipient (`to`) address for the authorization.
+    pub to: alloy::primitives::Address,
+    /// The amount to transfer (value).
+    pub value: U256,
+    /// Start of the validity window (inclusive).
+    pub valid_after: U256,
+    /// End of the validity window (exclusive).
+    pub valid_before: U256,
+    /// 32-byte authorization nonce (prevents replay).
+    pub nonce: FixedBytes<32>,
+    /// EIP-712 signature for the transfer authorization.
+    pub signature: Bytes,
+    /// Address of the token contract used for this transfer.
+    pub contract_address: alloy::primitives::Address,
+}
+
 /// Validates that the current time is within the `validAfter` and `validBefore` bounds.
 ///
 /// Adds a 6-second grace buffer when checking expiration to account for latency.
@@ -711,7 +748,9 @@ async fn assert_enough_balance<P: Provider>(
             otel.kind = "client"
         ))
         .await
-        .map_err(|e| FacilitatorLocalError::ContractCall(format!("assert_enough_balance: {e:?}")))?;
+        .map_err(|e| {
+            FacilitatorLocalError::ContractCall(format!("assert_enough_balance: {e:?}"))
+        })?;
 
     if balance < max_amount_required {
         Err(FacilitatorLocalError::InsufficientFunds((*sender).into()))
@@ -944,6 +983,53 @@ async fn transferWithAuthorization_0<'a, P: Provider>(
         signature.clone(),
     );
     Ok(TransferWithAuthorization0Call {
+        tx,
+        from,
+        to,
+        value,
+        valid_after,
+        valid_before,
+        nonce,
+        signature,
+        contract_address: *contract.address(),
+    })
+}
+
+/// Constructs a full `transferWithAuthorization` call for a verified payment payload.
+///
+/// This function prepares the transaction builder with gas pricing adapted to the network's
+/// capabilities (EIP-1559 or legacy) and packages it together with signature metadata
+/// into a [`TransferWithAuthorization1Call`] structure.
+///
+/// This function does not perform any validation — it assumes inputs are already checked.
+#[allow(non_snake_case)]
+async fn transferWithAuthorization_1<'a, P: Provider>(
+    contract: &'a USDC::USDCInstance<P>,
+    payment: &ExactEvmPayment,
+    signature: Bytes,
+) -> Result<TransferWithAuthorization1Call<&'a P>, FacilitatorLocalError> {
+    let from: Address = payment.from.into();
+    let to: Address = payment.to.into();
+    let value: U256 = payment.value.into();
+    let valid_after: U256 = payment.valid_after.into();
+    let valid_before: U256 = payment.valid_before.into();
+    let nonce = FixedBytes(payment.nonce.0);
+    let sig = Signature::from_raw(&signature).unwrap();
+    let v = sig.v();
+    let r = sig.r();
+    let s = sig.s();
+    let tx = contract.transferWithAuthorization_1(
+        from,
+        to,
+        value,
+        valid_after,
+        valid_before,
+        nonce,
+        v.into(),
+        r.into(),
+        s.into(),
+    );
+    Ok(TransferWithAuthorization1Call {
         tx,
         from,
         to,
