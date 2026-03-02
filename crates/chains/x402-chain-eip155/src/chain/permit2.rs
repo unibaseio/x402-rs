@@ -11,7 +11,7 @@ pub const PERMIT2_ADDRESS: Address = address!("0x000000000022D473030F116dDEE9F6B
 // TODO configurable address per chain
 /// The X402 ExactPermit2Proxy contract address for settling Permit2 payments.
 pub const EXACT_PERMIT2_PROXY_ADDRESS: Address =
-    address!("0x4020615294c913F045dc10f0a5cdEbd86c280001");
+    address!("0x98D0E9d6DC5BCd6FBB75b49dCd0204E966732392");
 
 // TODO configurable address per chain
 /// The X402 UptoPermit2Proxy contract address for settling Permit2 payments with variable amounts.
