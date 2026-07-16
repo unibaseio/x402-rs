@@ -1,0 +1,24 @@
+# Env files with secrets
+.env
+*/.env
+
+# Local channel/session state
+data/
+*/data/
+
+# Go
+*.exe
+*.test
+*.out
+go.work.sum
+
+# Compiled binaries
+client/client
+server/server
+facilitator/facilitator
+tools/keygen/keygen
+
+# Editor
+.DS_Store
+.idea/
+.vscode/
