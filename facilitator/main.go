@@ -28,6 +28,8 @@ import (
 	x402 "github.com/x402-foundation/x402/go/v2"
 	batchsettlement "github.com/x402-foundation/x402/go/v2/mechanisms/evm/batch-settlement"
 	batchedfac "github.com/x402-foundation/x402/go/v2/mechanisms/evm/batch-settlement/facilitator"
+	exactfac "github.com/x402-foundation/x402/go/v2/mechanisms/evm/exact/facilitator"
+	uptofac "github.com/x402-foundation/x402/go/v2/mechanisms/evm/upto/facilitator"
 )
 
 const defaultPort = "4022"
@@ -88,10 +90,14 @@ func main() {
 			fmt.Printf("  ✗ %-13s skipped: %v\n", chain.Name, err)
 			continue
 		}
-		facilitator.Register(
-			[]x402.Network{chain.Network()},
-			batchedfac.NewBatchSettlementEvmScheme(signer, authorizer),
-		)
+		// All three standard EVM schemes share the same signer:
+		//   exact            — one-shot EIP-3009 transferWithAuthorization
+		//   upto             — Permit2 max-authorization, charge actual usage
+		//   batch-settlement — prepaid channel + off-chain vouchers (subscriptions)
+		networks := []x402.Network{chain.Network()}
+		facilitator.Register(networks, exactfac.NewExactEvmScheme(signer, nil))
+		facilitator.Register(networks, uptofac.NewUptoEvmScheme(signer, nil))
+		facilitator.Register(networks, batchedfac.NewBatchSettlementEvmScheme(signer, authorizer))
 		fmt.Printf("  ✓ %-13s %s (%s)\n", chain.Name, chain.Network(), rpcURL)
 		active++
 	}

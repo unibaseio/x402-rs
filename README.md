@@ -145,14 +145,25 @@ To simulate **cancelling** and reclaiming the unused balance, set `REFUND_AFTER_
 
 ## The facilitator API
 
-The facilitator exposes the three standard x402 endpoints and holds **no custody** — funds live
-in the escrow contract; every transition is authorized by an EIP-712 signature.
+The facilitator exposes the three standard x402 v2 endpoints (spec §7) and holds **no
+custody** — funds move straight from payer to receiver (or live in the escrow contract for
+batch-settlement); every transition is authorized by the payer's signature.
 
 | Endpoint | Purpose |
 |----------|---------|
 | `GET /supported` | Advertises schemes, networks, and (optional) `receiverAuthorizer`. |
-| `POST /verify` | Off-chain voucher signature + channel-state check. No tx. |
-| `POST /settle` | Submits the onchain tx (deposit / batched claim+settle / refund). |
+| `POST /verify` | Off-chain payload validation (signature / balance / channel state). No tx. |
+| `POST /settle` | Submits the onchain tx. |
+
+(`GET /discovery/*` from spec §8 is the optional Bazaar marketplace extension — not implemented.)
+
+All three standard EVM schemes are registered on every enabled network:
+
+| Scheme | Model | Mechanism |
+|--------|-------|-----------|
+| `exact` | Fixed price per call | EIP-3009 `transferWithAuthorization` |
+| `upto` | Authorize a max, charge actual usage | Permit2 |
+| `batch-settlement` | Prepaid channel + off-chain vouchers (subscriptions) | Escrow contract + EIP-712 vouchers |
 
 Two keys drive it:
 - **`EVM_PRIVATE_KEY`** — the wallet that signs and broadcasts transactions (pays gas).
