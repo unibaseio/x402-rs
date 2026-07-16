@@ -2,7 +2,10 @@ go 1.24.0
 
 use (
 	./client
+	./e2e/exact
+	./e2e/upto
 	./facilitator
 	./server
+	./tools/fund-permit2
 	./tools/keygen
 )

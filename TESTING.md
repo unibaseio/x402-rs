@@ -143,6 +143,31 @@ balance returned to the subscriber.
 | `get chain ID` error on facilitator start | RPC unreachable; check `EVM_RPC_URL`. |
 | Server prints `Waiting for facilitator…` | Normal — it polls `/supported` for up to 60s so startup order doesn't matter. If it exits, the facilitator never came up on 4022. |
 
+## Testing the other schemes (exact / upto)
+
+The facilitator registers all three EVM schemes. `e2e/` has one self-contained
+test per scheme — each spins up a tiny resource server, pays it once through
+your facilitator, and prints the settle receipt:
+
+```bash
+# exact — fixed $0.001 via EIP-3009 (subscriber only needs USDC)
+cd e2e/exact
+PAYER_KEY=0x<subscriber-key> RECEIVER=0x<receiver-address> \
+  FACILITATOR_URL=http://localhost:4022 go run .
+
+# upto — authorize $0.01 via Permit2, server bills 40% of it.
+# One-time prep: the payer needs a little ETH and a Permit2 allowance:
+cd tools/fund-permit2
+FUNDER_KEY=0x<facilitator-key> PAYER_KEY=0x<subscriber-key> go run .
+# then:
+cd ../../e2e/upto
+PAYER_KEY=0x<subscriber-key> RECEIVER=0x<receiver-address> \
+  FACILITATOR_URL=http://localhost:4022 go run .
+```
+
+Success looks like `... 200 OK` plus a `settle: {"success":true, "transaction":"0x..."}`
+line, and the matching `[verify] ok` / `[settle] tx=...` in the facilitator log.
+
 ## Fully offline (no testnet) — advanced
 
 To avoid the testnet entirely, run a local Anvil chain and deploy the batch-settlement contract

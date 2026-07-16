@@ -17,6 +17,9 @@ client/client
 server/server
 facilitator/facilitator
 tools/keygen/keygen
+tools/fund-permit2/fund-permit2
+e2e/exact/exact
+e2e/upto/upto
 
 # Editor
 .DS_Store
