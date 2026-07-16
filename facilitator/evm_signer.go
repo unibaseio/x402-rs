@@ -116,7 +116,9 @@ func (s *facilitatorEvmSigner) ReadContract(
 		return nil, fmt.Errorf("pack call: %w", err)
 	}
 	to := common.HexToAddress(contractAddress)
-	out, err := s.client.CallContract(ctx, ethereum.CallMsg{To: &to, Data: data}, nil)
+	// From must be the facilitator: schemes simulate settle() via eth_call, and
+	// the Permit2 proxies enforce msg.sender == witness.facilitator onchain.
+	out, err := s.client.CallContract(ctx, ethereum.CallMsg{From: s.address, To: &to, Data: data}, nil)
 	if err != nil {
 		return nil, fmt.Errorf("call contract: %w", err)
 	}
