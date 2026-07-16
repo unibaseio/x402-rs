@@ -25,6 +25,8 @@ Fund them:
 
 ## 1. Start your facilitator
 
+### Option A — Go directly
+
 ```bash
 cd facilitator
 cp .env.example .env
@@ -32,19 +34,39 @@ cp .env.example .env
 go run .
 ```
 
-Expected:
+### Option B — Docker
+
+```bash
+# from the repo root; reads EVM_PRIVATE_KEY (+ optional NETWORKS) from env or ./.env
+EVM_PRIVATE_KEY=0x... docker compose up -d facilitator
+docker compose logs -f facilitator
+```
+
+Expected (multi-chain is built in — no RPC configuration needed):
 ```
 EVM Facilitator account: 0x....
+Networks:
+  ✓ base-sepolia  eip155:84532 (https://sepolia.base.org)
+  ✓ base          eip155:8453 (https://mainnet.base.org)
+  ✓ bsc-testnet   eip155:97   (https://data-seed-prebsc-1-s1.bnbchain.org:8545)
+  ✓ bsc           eip155:56   (https://bsc-dataseed.bnbchain.org)
+  ✓ polygon       eip155:137  (...)
+  ✓ arbitrum      eip155:42161 (...)
 Facilitator listening on http://localhost:4022
 ```
 
+Select a subset with `NETWORKS=testnets` / `NETWORKS=mainnets` /
+`NETWORKS=base-sepolia,bsc-testnet`; override a chain's endpoint with
+`RPC_URL_<NAME>` (e.g. `RPC_URL_BSC=...`). Unreachable chains are skipped with
+a warning, not fatal.
+
 ### Test it in isolation (no funds needed)
 
-`GET /supported` — should list the batch-settlement scheme:
+`GET /supported` — should list the batch-settlement scheme on every enabled network:
 ```bash
 curl -s http://localhost:4022/supported | jq
 # {
-#   "kinds": [{"x402Version":2,"scheme":"batch-settlement","network":"eip155:84532"}],
+#   "kinds": [{"x402Version":2,"scheme":"batch-settlement","network":"eip155:84532"}, ...],
 #   ...
 # }
 ```

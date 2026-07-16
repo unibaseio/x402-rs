@@ -42,14 +42,14 @@ func main() {
 		fmt.Println("EVM_PRIVATE_KEY environment variable is required")
 		os.Exit(1)
 	}
-	rpcURL := envOr("EVM_RPC_URL", "https://sepolia.base.org")
 
-	// The evmSigner is the wallet that actually submits transactions onchain
-	// (deposit / claim / settle / refund). It pays gas, so it needs a small
-	// balance of the native token. It never touches subscriber funds directly.
-	evmSigner, err := newFacilitatorEvmSigner(evmPrivateKey, rpcURL)
+	// Networks come from the built-in registry (networks.go) — each has default
+	// public RPCs, so nothing needs configuring. NETWORKS selects a subset
+	// ("all", "testnets", "mainnets", or comma-separated names) and
+	// RPC_URL_<NAME> overrides a chain's endpoint.
+	chains, err := selectChains(os.Getenv("NETWORKS"))
 	if err != nil {
-		fmt.Printf("Failed to create EVM signer: %v\n", err)
+		fmt.Printf("Invalid NETWORKS: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -66,20 +66,40 @@ func main() {
 		}
 	}
 
-	fmt.Printf("EVM Facilitator account: %s\n", evmSigner.GetAddresses()[0])
+	if addr, err := addressFromPrivateKey(evmPrivateKey); err == nil {
+		fmt.Printf("EVM Facilitator account: %s\n", addr)
+	}
 	if authorizer != nil {
 		fmt.Printf("EVM Receiver Authorizer: %s\n", authorizer.Address())
 	} else {
 		fmt.Println("EVM Receiver Authorizer: not configured (servers must self-manage)")
 	}
 
-	// Wire up the facilitator with the batch-settlement scheme on Base Sepolia.
-	// Add more networks (e.g. "eip155:8453" for Base mainnet) here as needed.
+	// One signer per chain: each dials its own RPC, verifies the chain ID, and
+	// confirms the escrow contract is deployed. Unreachable chains are skipped
+	// with a warning so one flaky public RPC can't take the facilitator down.
+	fmt.Println("Networks:")
 	facilitator := x402.Newx402Facilitator()
-	facilitator.Register(
-		[]x402.Network{"eip155:84532"},
-		batchedfac.NewBatchSettlementEvmScheme(evmSigner, authorizer),
-	)
+	connectCtx, connectCancel := context.WithTimeout(context.Background(), 60*time.Second)
+	active := 0
+	for _, chain := range chains {
+		signer, rpcURL, err := connectChain(connectCtx, chain, evmPrivateKey)
+		if err != nil {
+			fmt.Printf("  ✗ %-13s skipped: %v\n", chain.Name, err)
+			continue
+		}
+		facilitator.Register(
+			[]x402.Network{chain.Network()},
+			batchedfac.NewBatchSettlementEvmScheme(signer, authorizer),
+		)
+		fmt.Printf("  ✓ %-13s %s (%s)\n", chain.Name, chain.Network(), rpcURL)
+		active++
+	}
+	connectCancel()
+	if active == 0 {
+		fmt.Println("No networks available — check connectivity or RPC_URL_* overrides")
+		os.Exit(1)
+	}
 
 	// Observability hooks — swap for structured logging / metrics in production.
 	facilitator.OnAfterVerify(func(ctx x402.FacilitatorVerifyResultContext) error {

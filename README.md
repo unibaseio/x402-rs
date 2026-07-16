@@ -94,10 +94,21 @@ Each directory is its own Go module and requires `github.com/x402-foundation/x40
 ```bash
 cd facilitator
 cp .env.example .env
-#   EVM_PRIVATE_KEY = facilitator wallet (needs ETH for gas)
+#   EVM_PRIVATE_KEY = facilitator wallet (needs gas token on each enabled chain)
 go run .
 # → Facilitator listening on http://localhost:4022
 ```
+
+Or with Docker (from the repo root):
+
+```bash
+EVM_PRIVATE_KEY=0x... docker compose up -d facilitator
+```
+
+Multi-chain is **built in** — Base Sepolia, Base, BSC testnet, BSC, Polygon and Arbitrum all
+work with zero RPC configuration (the batch-settlement escrow is CREATE2-deployed at the same
+address on every chain). Select a subset with `NETWORKS=testnets|mainnets|base-sepolia,bsc`,
+override an endpoint with `RPC_URL_<NAME>` (e.g. `RPC_URL_BSC=...`).
 
 ### 2. Resource server (subscription API)
 
