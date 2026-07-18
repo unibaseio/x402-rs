@@ -18,7 +18,10 @@ USER x402
 COPY --from=build /out/facilitator /usr/local/bin/facilitator
 
 EXPOSE 4022
+# Shell-form CMD so ${PORT} expands: the healthcheck must follow the PORT env
+# override (main.go: envOr("PORT", 4022)) — probing a hardcoded 4022 marks a
+# perfectly healthy container "unhealthy" whenever PORT is set.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s \
-  CMD wget -qO- http://127.0.0.1:4022/supported >/dev/null || exit 1
+  CMD wget -qO- "http://127.0.0.1:${PORT:-4022}/supported" >/dev/null || exit 1
 
 ENTRYPOINT ["facilitator"]
